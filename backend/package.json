@@ -1,5 +1,5 @@
 {
-  "name": "your-project-name",
+  "name": "@prod/backend",
   "version": "0.0.0",
   "description": "",
   "main": "index.js",
@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "prettier": "^3.5.3",
     "rimraf": "^6.0.1",
@@ -19,6 +20,7 @@
   },
   "dependencies": {
     "@trpc/server": "^11.1.1",
+    "cors": "^2.8.5",
     "express": "^5.1.0"
   }
 }
