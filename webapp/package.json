@@ -35,7 +35,7 @@
     "vite": "^6.3.2"
   },
   "dependencies": {
-    "@prod/backend":"workspace:*",
+    "@prod/backend": "workspace:*",
     "@tanstack/react-query": "^5.75.1",
     "@trpc/client": "^11.1.2",
     "@trpc/react-query": "^11.1.2",

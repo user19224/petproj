@@ -1,15 +1,7 @@
-import { TrpcProvider } from "./lib/trpc"
-import { AllIdeasPage } from "./pages/AllIdesPage"
+import { TrpcProvider } from './lib/trpc'
 
- 
+import { UploadPreview } from './pages/UploadPreview'
 
-export const App = ()=>{
-  return (
-
-    <TrpcProvider>
-
-      <AllIdeasPage />
-    </TrpcProvider>
-    
-  )
+export const App = () => {
+  return <UploadPreview />
 }

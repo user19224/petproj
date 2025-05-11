@@ -1,5 +1,14 @@
 {
-  "name":"prod",
-  "private":true,
-  "version":"0.0.0"
+  "name": "prod",
+  "private": true,
+  "version": "0.0.0",
+  "devDependencies": {
+    "@types/cors": "^2.8.18",
+    "@types/express": "^5.0.1",
+    "@types/multer": "^1.4.12",
+    "@types/xlsx": "^0.0.35"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
 }
