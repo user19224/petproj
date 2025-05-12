@@ -1,5 +1,5 @@
 .upload-container {
-  max-width: 48rem; 
+  max-width: 48rem;
   margin: 0 auto;
   padding: 1rem;
   font-family: sans-serif;
@@ -22,7 +22,7 @@
 
 .upload-button {
   padding: 0.5rem 1rem;
-  background-color: #3182ce; 
+  background-color: #3182ce;
   color: white;
   border: none;
   border-radius: 0.25rem;
@@ -36,13 +36,13 @@
 }
 
 .error {
-  color: #e53e3e;  
+  color: #e53e3e;
   margin-bottom: 1rem;
 }
 
 .table-container {
   overflow-x: auto;
-  border: 1px solid #e2e8f0; 
+  border: 1px solid #e2e8f0;
   border-radius: 0.25rem;
 }
 
@@ -58,7 +58,7 @@
 }
 
 .preview-table thead {
-  background-color: #f7fafc; 
+  background-color: #f7fafc;
 }
 
 .preview-table tbody tr:nth-child(even) {
