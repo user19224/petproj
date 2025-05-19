@@ -1,4 +1,5 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react'
+import { useAuth } from '../lib/AuthContext'
 import '../styles/UploadPreview.css'
 import '../styles/WeightsSetup.css'
 import '../styles/Results.css'
@@ -13,6 +14,7 @@ interface CriteriaEntry {
 type Criteria = Record<string, CriteriaEntry>
 
 export const UploadPreview: React.FC = () => {
+  const {token} = useAuth();
   const [step, setStep] = useState<'upload' | 'weights' | 'results'>('upload')
   const [file, setFile] = useState<File | null>(null)
   const [headers, setHeaders] = useState<string[]>([])
@@ -73,32 +75,31 @@ export const UploadPreview: React.FC = () => {
       [col]: { ...cur, direction: cur.direction === 'max' ? 'min' : 'max' },
     })
   }
-  const handleCompute = async () => {
-    setLoading(true)
-    setError(null)
+ const handleCompute = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      const form = new FormData()
-      form.append('file', file as File)
-      form.append('criteria', JSON.stringify(criteria))
+      const form = new FormData();
+      form.append('file', file as File);
+      form.append('criteria', JSON.stringify(criteria));
       const res = await fetch('http://localhost:4000/api/compute', {
         method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
         body: form,
-      })
+      });
       if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.error || 'Compute failed')
+        const err = await res.json(); throw new Error(err.error || 'Compute failed');
       }
-      const { results, bestAdditive, bestDistance } = await res.json()
-      setResults(results)
-      setBestAdditive(bestAdditive)
-      setBestDistance(bestDistance)
-      setStep('results')
+      const { results, bestAdditive, bestDistance } = await res.json();
+      setResults(results);
+      setBestAdditive(bestAdditive);
+      setBestDistance(bestDistance);
+      setStep('results');
+
     } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
+      setError(err.message);
+    } finally { setLoading(false); }
+  };
 
   if (step === 'results') {
     return (
