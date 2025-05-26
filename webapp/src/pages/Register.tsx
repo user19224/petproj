@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import '../styles/auth.css'
 
 export const RegisterPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -21,16 +22,33 @@ export const RegisterPage: React.FC = () => {
     }
   };
 
-  return (
-    <div className="auth-container">
-      <h2>Register</h2>
+ 
+return (
+  <div className="auth-wrapper">
+    <div className="auth-card">
+      <h1>Register</h1>
       {error && <div className="error">{error}</div>}
       <form onSubmit={handleSubmit}>
-        <input value={username} onChange={e=>setUsername(e.target.value)} placeholder="Username" />
-        <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password" />
+        <input
+          type="text"
+          value={username}
+          onChange={e => setUsername(e.target.value)}
+          placeholder="Username"
+        />
+        <input
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          placeholder="Password"
+        />
         <button type="submit">Register</button>
       </form>
-      <p>Already have an account? <Link to="/login">Login here</Link></p>
+      <div className="switch-link">
+        Already have an account? <Link to="/login">Login here</Link>
+      </div>
     </div>
-  );
+  </div>
+)
+
+
 };

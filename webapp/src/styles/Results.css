@@ -1,41 +1,111 @@
+/* Общий контейнер результатов, центрируем по горизонтали */
 .results-container {
-  max-width: 64rem;
-  margin: 2rem auto;
-  padding: 1rem;
-  font-family: sans-serif;
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+  flex: 1; /* чтобы тянулось от header до footer */
 }
 
-.results-summary {
+/* «Стеклянная» карточка результатов */
+.results-card {
+  background: rgba(32, 34, 37, 0.85);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 2.5rem 4rem;         /* чуть больше внутреннего отступа */
+  width: 66vw;                  /* занимает 2/3 ширины экрана */
+  max-width: 1000px;            /* но не больше 1000px */
+  box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #EAEAEA;
+}
+
+/* Блок карточек «Best by…» */
+.best-cards {
   display: flex;
+  gap: 1rem;
   justify-content: space-between;
   margin-bottom: 1.5rem;
+  flex-wrap: wrap;
 }
 
+/* Одиночная карточка «Best by…» */
+.best-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(58, 64, 83, 0.8);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: transform 0.2s;
+  cursor: default;
+}
+.best-card:hover {
+  transform: scale(1.02);
+}
+.best-card .icon {
+  font-size: 1.2rem;
+}
+
+/* Обёртка таблицы с фиксированной шапкой */
+.table-wrapper {
+  max-height: 80vh;
+  overflow: auto;
+  border: 1px solid rgba(58, 64, 83, 0.7);
+  border-radius: 6px;
+}
+
+/* Таблица результатов */
 .results-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 1.5rem;
 }
 .results-table th,
 .results-table td {
-  padding: 0.5rem;
-  border: 1px solid #e2e8f0;
-}
-.results-table thead {
-  background-color: #f7fafc;
-}
-.results-table tr.highlight {
-  background-color: #c6f6d5; /* светло-зеленый */
+  padding: 0.6rem;
+  border: 1px solid rgba(58, 64, 83, 0.7);
+  text-align: center;
 }
 
-.upload-button {
-  padding: 0.5rem 1rem;
-  background-color: #3182ce;
-  color: white;
+/* Фиксированная (sticky) тёмная шапка с градиентом */
+.results-table thead th {
+  position: sticky;
+  top: 0;
+  background: linear-gradient(90deg, #2A2A3E, #1E1E2A);
+  color: #F7FAFC;
+  z-index: 2;
+}
+
+/* Зебра-стрипинг */
+.results-table tbody tr:nth-child(even) {
+  background: rgba(58, 64, 83, 0.6);
+}
+.results-table tbody tr:nth-child(odd) {
+  background: rgba(32, 34, 37, 0.6);
+}
+
+/* Подсветка лучшей строки */
+.results-table tr.highlight {
+  background: rgba(72, 187, 120, 0.6) !important;
+  transform: scale(1.01);
+  transition: transform 0.2s;
+}
+
+/* Кнопка «Back to History» */
+.back-button {
+  display: block;
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 0.75rem;
+  background: linear-gradient(90deg, #4B6CB7, #182848);
+  color: #fff;
   border: none;
-  border-radius: 0.25rem;
+  border-radius: 6px;
+  font-size: 1rem;
   cursor: pointer;
+  transition: background 0.3s;
 }
-.upload-button:hover {
-  background-color: #2b6cb0;
+.back-button:hover {
+  background: linear-gradient(90deg, #182848, #4B6CB7);
 }
+

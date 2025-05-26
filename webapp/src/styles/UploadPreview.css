@@ -1,70 +1,146 @@
-.upload-container {
-  max-width: 48rem;
-  margin: 0 auto;
-  padding: 1rem;
-  font-family: sans-serif;
+/* Центрируем карточку по высоте */
+.upload-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;           
+  padding: 2rem;
 }
 
-.upload-container h1 {
+/* «Стеклянная» карточка с блюром и тенью */
+.upload-card {
+  background: rgba(32, 34, 37, 0.85);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+
+  width: 100%;
+  max-width: 800px;           /* было 500px */
+  padding: 2.5rem 3.5rem;     /* было 2rem 3rem */
+  box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+  border: 1px solid rgba(255,255,255,0.1);
+  animation: fadeInUp 0.5s ease-out;
+}
+
+/* Заголовок внутри карточки */
+.upload-card h1 {
+  color: #EAEAEA;
+  margin-bottom: 1.5rem;
+  font-size: 1.75rem;
+  text-align: center;
+  position: relative;
+}
+/* 2) Градиентная линия под заголовком */
+.upload-card h1::after {
+  content: "";
+  position: absolute;
+  bottom: -0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #6b73ff, #000dff);
+}
+
+/* Карточка загрузки — скрыта, если мы юзаем upload-card */
+.upload-container {
+  display: none;
+}
+
+/* Форма загрузки */
+.upload-form h1 {
   font-size: 1.5rem;
-  font-weight: bold;
   margin-bottom: 1rem;
 }
 
-.upload-container form {
-  margin-bottom: 1.5rem;
+/* Прячем настоящий инпут */
+.upload-form .upload-input-wrapper input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
-.upload-input {
-  display: block;
-  margin-bottom: 0.5rem;
-}
-
-.upload-button {
-  padding: 0.5rem 1rem;
-  background-color: #3182ce;
-  color: white;
-  border: none;
-  border-radius: 0.25rem;
+/* Стили кнопки-лейбла */
+.upload-form .upload-input-wrapper label {
   cursor: pointer;
-  transition: opacity 0.2s;
+  background: #3182ce;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  margin-right: 1rem;
+  transition: background 0.2s;
+}
+.upload-form .upload-input-wrapper label:hover {
+  background: #2b6cb0;
 }
 
-.upload-button:disabled {
-  opacity: 0.5;
+/* Имя выбранного файла */
+.upload-form .upload-input-wrapper span {
+  color: #ccc;
+  font-size: 0.9rem;
+  user-select: none;
+}
+
+/* Кнопка отправки */
+.upload-form .upload-button {
+  width: 100%;
+  padding: 0.75rem;
+  background: linear-gradient(90deg, #4b6cb7, #182848);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.upload-form .upload-button:hover:not(:disabled) {
+  background: linear-gradient(90deg, #182848, #4b6cb7);
+}
+.upload-form .upload-button:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .error {
-  color: #e53e3e;
-  margin-bottom: 1rem;
+  color: #E53E3E;
+  margin-top: 0.5rem;
 }
 
+/* Превью таблица */
 .table-container {
+  margin-top: 2rem;
   overflow-x: auto;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.25rem;
+  background: #1E1E2A;
+  border: 1px solid #2A2A3E;
+  border-radius: 6px;
+  padding: 1rem;
 }
-
 .preview-table {
   width: 100%;
   border-collapse: collapse;
+  color: #EAEAEA;
 }
-
 .preview-table th,
 .preview-table td {
+  border: 1px solid #3A3A4E;
   padding: 0.5rem;
-  border: 1px solid #e2e8f0;
+  text-align: center;
 }
-
 .preview-table thead {
-  background-color: #f7fafc;
+  background: #2A2A3E;
 }
-
 .preview-table tbody tr:nth-child(even) {
-  background-color: #f7fafc;
+  background: #252533;
+}
+.preview-table tbody tr:nth-child(odd) {
+  background: #1E1E2A;
 }
 
-.preview-table tbody tr:nth-child(odd) {
-  background-color: #ffffff;
+/* Анимация появления */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+

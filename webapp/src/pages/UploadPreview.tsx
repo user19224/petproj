@@ -1,5 +1,11 @@
-import React, { useState, ChangeEvent, FormEvent } from 'react'
+import React, {
+  useState,
+  useEffect,
+  ChangeEvent,
+  FormEvent
+} from 'react'
 import { useAuth } from '../lib/AuthContext'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import '../styles/UploadPreview.css'
 import '../styles/WeightsSetup.css'
 import '../styles/Results.css'
@@ -14,8 +20,15 @@ interface CriteriaEntry {
 type Criteria = Record<string, CriteriaEntry>
 
 export const UploadPreview: React.FC = () => {
-  const {token} = useAuth();
-  const [step, setStep] = useState<'upload' | 'weights' | 'results'>('upload')
+  const [search] = useSearchParams()
+  const runId = search.get('runId')
+  const isEditing = !!runId
+  const { token } = useAuth()
+  const navigate = useNavigate()
+
+  const [step, setStep] = useState<'upload' | 'weights' | 'results'>(
+    isEditing ? 'weights' : 'upload'
+  )
   const [file, setFile] = useState<File | null>(null)
   const [headers, setHeaders] = useState<string[]>([])
   const [preview, setPreview] = useState<PreviewRow[]>([])
@@ -26,15 +39,64 @@ export const UploadPreview: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // 1) Сбросить стейт, когда переключились из редактирования обратно на upload
+  useEffect(() => {
+    if (!isEditing) {
+      setStep('upload')
+      setFile(null)
+      setHeaders([])
+      setPreview([])
+      setCriteria({})
+      setResults([])
+      setBestAdditive(null)
+      setBestDistance(null)
+      setError(null)
+    }
+  }, [isEditing])
+
+  // 2) Если редактирование — подтягиваем run по runId
+  useEffect(() => {
+    if (!isEditing) return
+    setLoading(true)
+    fetch(`http://localhost:4000/api/history/${runId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(res => {
+        if (!res.ok) throw res
+        return res.json()
+      })
+      .then(data => {
+        const row = data.history
+        const parsed = JSON.parse(row.results) as Array<{
+          original: PreviewRow
+        }>
+        const raw = parsed.map(r => r.original)
+        if (raw.length) {
+          setHeaders(Object.keys(raw[0]))
+          setPreview(raw.slice(0, 5))
+          setCriteria(JSON.parse(row.criteria))
+          setStep('weights')
+        }
+      })
+      .catch((err: any) =>
+        setError(err.error || 'Failed to load run for editing')
+      )
+      .finally(() => setLoading(false))
+  }, [isEditing, runId, token])
+
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     setError(null)
     if (e.target.files && e.target.files.length > 0) {
       setFile(e.target.files[0])
     }
   }
+
   const handleUpload = async (e: FormEvent) => {
     e.preventDefault()
-    if (!file) return setError('Select file')
+    if (!file) {
+      setError('Select a file')
+      return
+    }
     setLoading(true)
     try {
       const form = new FormData()
@@ -51,9 +113,10 @@ export const UploadPreview: React.FC = () => {
       setHeaders(headers)
       setPreview(preview)
 
+      // инициализация критериев равномерными весами и направлением max
       const w = parseFloat((1 / headers.length).toFixed(1))
       const init: Criteria = {}
-      headers.forEach((h: string) => {
+      headers.forEach((h:any) => {
         init[h] = { weight: w, direction: 'max' }
       })
       setCriteria(init)
@@ -66,57 +129,82 @@ export const UploadPreview: React.FC = () => {
   }
 
   const handleWeightChange = (col: string, val: number) => {
-    setCriteria({ ...criteria, [col]: { ...criteria[col], weight: val } })
+    setCriteria(prev => ({
+      ...prev,
+      [col]: { ...prev[col], weight: val },
+    }))
   }
   const handleDirectionToggle = (col: string) => {
-    const cur = criteria[col]
-    setCriteria({
-      ...criteria,
-      [col]: { ...cur, direction: cur.direction === 'max' ? 'min' : 'max' },
-    })
+    setCriteria(prev => ({
+      ...prev,
+      [col]: {
+        ...prev[col],
+        direction: prev[col].direction === 'max' ? 'min' : 'max',
+      },
+    }))
   }
- const handleCompute = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const form = new FormData();
-      form.append('file', file as File);
-      form.append('criteria', JSON.stringify(criteria));
-      const res = await fetch('http://localhost:4000/api/compute', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: form,
-      });
-      if (!res.ok) {
-        const err = await res.json(); throw new Error(err.error || 'Compute failed');
-      }
-      const { results, bestAdditive, bestDistance } = await res.json();
-      setResults(results);
-      setBestAdditive(bestAdditive);
-      setBestDistance(bestDistance);
-      setStep('results');
 
+  const handleCompute = async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      let res: Response
+      if (isEditing) {
+        // пересчёт существующего run
+        res = await fetch(
+          `http://localhost:4000/api/history/${runId}/compute`,
+          {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
+      } else {
+        // новый расчёт
+        const form = new FormData()
+        form.append('file', file as File)
+        form.append('criteria', JSON.stringify(criteria))
+        res = await fetch('http://localhost:4000/api/compute', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: form,
+        })
+      }
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Compute failed')
+      }
+      const { results, bestAdditive, bestDistance } = await res.json()
+      setResults(results)
+      setBestAdditive(bestAdditive)
+      setBestDistance(bestDistance)
+      setStep('results')
     } catch (err: any) {
-      setError(err.message);
-    } finally { setLoading(false); }
-  };
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (step === 'results') {
-    return (
-      <div className="results-container">
+  return (
+    <div className="upload-wrapper">
+      <div className="results-card">
         <h1>Results</h1>
-        {error && <div className="error">{error}</div>}
-        <div className="results-summary">
-          <div>
-            Best by Additive: #{bestAdditive.index} (score=
-            {bestAdditive.additive})
+
+        {/* Карточки Best by */}
+        <div className="best-cards">
+          <div className="best-card">
+            <span className="icon">🏆</span>
+            <span>Best by Additive: #{bestAdditive.index} (score={bestAdditive.additive})</span>
           </div>
-          <div>
-            Best by Distance: #{bestDistance.index} (distance=
-            {bestDistance.distance})
+          <div className="best-card">
+            <span className="icon">🏆</span>
+            <span>Best by Distance: #{bestDistance.index} (distance={bestDistance.distance})</span>
           </div>
         </div>
-        <div className="table-container">
+
+        {/* Таблица с фиксированным хедом */}
+        <div className="table-wrapper">
           <table className="results-table">
             <thead>
               <tr>
@@ -156,70 +244,92 @@ export const UploadPreview: React.FC = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Кнопка назад */}
         <button
-          className="upload-button"
-          onClick={() => window.location.reload()}
+          className="back-button"
+          onClick={() => navigate('/history')}
         >
-          Restart
+          Back to History
         </button>
       </div>
-    )
-  }
+    </div>
+  );
+}
 
-  return (
-    <div className="upload-container">
-      {step === 'upload' && (
-        <form onSubmit={handleUpload} className="upload-form">
+return (
+  <div className="upload-wrapper">
+    <div className="upload-card">
+      {step === 'upload' && !isEditing && (
+        <>
           <h1>Upload Excel</h1>
-          <input
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={handleFileChange}
-            className="upload-input"
-          />
-          <button disabled={loading} className="upload-button">
-            {loading ? 'Uploading...' : 'Upload & Next'}
-          </button>
-          {error && <div className="error">{error}</div>}
-        </form>
+          <form onSubmit={handleUpload} className="upload-form">
+            <div className="upload-input-wrapper">
+              <label htmlFor="file">Выберите файл</label>
+              <input
+                id="file"
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileChange}
+              />
+              <span>{file ? file.name : 'Файл не выбран'}</span>
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="upload-button"
+            >
+              {loading ? 'Uploading...' : 'Upload & Next'}
+            </button>
+            {error && <div className="error">{error}</div>}
+          </form>
+        </>
       )}
+
       {step === 'weights' && (
-        <div className="weights-container">
+        <>
           <h1>Setup Criteria</h1>
           {error && <div className="error">{error}</div>}
-          {headers.map((col) => (
-            <div key={col} className="weight-row">
-              <span>{col}</span>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.1}
-                value={criteria[col].weight}
-                onChange={(e) =>
-                  handleWeightChange(col, parseFloat(e.target.value))
-                }
-              />
-              <span>{criteria[col].weight.toFixed(1)}</span>
-              <button
-                className="toggle-button"
-                onClick={() => handleDirectionToggle(col)}
-              >
-                {criteria[col].direction === 'max' ? '↑' : '↓'}
-              </button>
-            </div>
-          ))}
-          <div className="button-group">
-            <button
-              className="upload-button"
-              onClick={handleCompute}
-              disabled={loading}
-            >
-              {loading ? 'Computing...' : 'Compute'}
-            </button>
+          <div className="weights-container">
+            {headers.map(col => (
+              <div key={col} className="weight-row">
+                <span>{col}</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  value={criteria[col].weight}
+                  onChange={e =>
+                    handleWeightChange(col, parseFloat(e.target.value))
+                  }
+                />
+                <span>{criteria[col].weight.toFixed(1)}</span>
+                <button
+                  className="toggle-button"
+                  onClick={() => handleDirectionToggle(col)}
+                >
+                  {criteria[col].direction === 'max' ? '↑' : '↓'}
+                </button>
+              </div>
+            ))}
           </div>
-        </div>
+          <button
+            className="upload-button compute-button"
+            onClick={handleCompute}
+            disabled={loading}
+          >
+            {loading
+              ? (isEditing ? 'Recomputing...' : 'Computing...')
+              : (isEditing ? 'Recompute' : 'Compute')}
+          </button>
+        </>
       )}
     </div>
-  )
-}
+  </div>
+)
+
+
+
+ }
+

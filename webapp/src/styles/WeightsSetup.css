@@ -1,31 +1,111 @@
 .weights-container {
-  max-width: 48rem;
-  margin: 2rem auto;
-  padding: 1rem;
-  font-family: sans-serif;
+  background: #1E1E2A;
+  border: 1px solid #2A2A3E;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-top: 2rem;
 }
-
+.weights-container h1 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
 .weight-row {
   display: flex;
   align-items: center;
+  gap: 1rem;
   margin-bottom: 1rem;
 }
 .weight-row span {
-  flex: 1;
+  width: 6rem;
+  color: #EAEAEA;
 }
 .weight-row input[type='range'] {
-  flex: 2;
-  margin: 0 0.5rem;
+  flex: 1;
+  -webkit-appearance: none;
+  background: transparent;
+}
+.weight-row input[type='range']::-webkit-slider-runnable-track {
+  height: 8px;
+  background: #3A3A4E;
+  border-radius: 4px;
+}
+.weight-row input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #3182CE;
+  border-radius: 50%;
+  margin-top: -4px;
+  cursor: pointer;
 }
 .toggle-button {
-  background: none;
+  background: #3182CE;
+  color: white;
   border: none;
-  font-size: 1.25rem;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
-  padding: 0 0.5rem;
+  transition: background 0.2s;
+}
+.toggle-button:hover {
+  background: #2B6CB0;
+}
+/* Кнопка Compute */
+.upload-button {
+  margin-top: 2rem;
+  display: block;
+  width: 100%;
 }
 
-.button-group {
-  text-align: right;
+
+/* Сделать compute/recompute полноширинной кнопкой в блоке весов */
+.weights-container .upload-button {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  background: linear-gradient(90deg, #4B6CB7, #182848);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s;
   margin-top: 1.5rem;
 }
+.weights-container .upload-button:hover:not(:disabled) {
+  background: linear-gradient(90deg, #182848, #4B6CB7);
+}
+.weights-container .upload-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+
+
+/* Специально для кнопки Compute/Recompute */
+.compute-button {
+  display: block;               /* делает ширину по всей доступной области */
+  width: 100%;                  /* 100% контейнера .weights-container */
+  margin-top: 1.5rem;           /* отступ сверху */
+  padding: 0.75rem;             /* внутренние отступы */
+  font-size: 1rem;
+  background: linear-gradient(90deg, #4B6CB7, #182848);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s, opacity 0.2s;
+}
+
+.compute-button:hover:not(:disabled) {
+  background: linear-gradient(90deg, #182848, #4B6CB7);
+}
+
+.compute-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
