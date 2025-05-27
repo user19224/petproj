@@ -51,7 +51,7 @@
 .toggle-button:hover {
   background: #2B6CB0;
 }
-/* Кнопка Compute */
+
 .upload-button {
   margin-top: 2rem;
   display: block;
@@ -59,7 +59,7 @@
 }
 
 
-/* Сделать compute/recompute полноширинной кнопкой в блоке весов */
+
 .weights-container .upload-button {
   display: block;
   width: 100%;
@@ -84,12 +84,11 @@
 
 
 
-/* Специально для кнопки Compute/Recompute */
 .compute-button {
-  display: block;               /* делает ширину по всей доступной области */
-  width: 100%;                  /* 100% контейнера .weights-container */
-  margin-top: 1.5rem;           /* отступ сверху */
-  padding: 0.75rem;             /* внутренние отступы */
+  display: block;             
+  width: 100%;                  
+  margin-top: 1.5rem;          
+  padding: 0.75rem;             
   font-size: 1rem;
   background: linear-gradient(90deg, #4B6CB7, #182848);
   color: #fff;

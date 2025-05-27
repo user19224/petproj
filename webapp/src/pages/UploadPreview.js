@@ -30,7 +30,6 @@ export const UploadPreview = () => {
     const [bestDistance, setBestDistance] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    // 1) Сбросить стейт, когда переключились из редактирования обратно на upload
     useEffect(() => {
         if (!isEditing) {
             setStep('upload');
@@ -44,7 +43,6 @@ export const UploadPreview = () => {
             setError(null);
         }
     }, [isEditing]);
-    // 2) Если редактирование — подтягиваем run по runId
     useEffect(() => {
         if (!isEditing)
             return;
@@ -98,7 +96,6 @@ export const UploadPreview = () => {
             const { headers, preview } = yield res.json();
             setHeaders(headers);
             setPreview(preview);
-            // инициализация критериев равномерными весами и направлением max
             const w = parseFloat((1 / headers.length).toFixed(1));
             const init = {};
             headers.forEach((h) => {
@@ -126,14 +123,12 @@ export const UploadPreview = () => {
         try {
             let res;
             if (isEditing) {
-                // пересчёт существующего run
                 res = yield fetch(`http://localhost:4000/api/history/${runId}/compute`, {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${token}` },
                 });
             }
             else {
-                // новый расчёт
                 const form = new FormData();
                 form.append('file', file);
                 form.append('criteria', JSON.stringify(criteria));

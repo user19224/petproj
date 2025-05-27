@@ -7,16 +7,16 @@ import Database from 'better-sqlite3'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
-// --- Configurations ---
+
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret'
 const PORT = process.env.PORT || 4000
 const app = express()
 
-// --- Middleware ---
+
 app.use(cors())
 app.use(express.json())
 
-// --- Database Setup ---
+
 const db = new Database('app.db')
 // Users
 db.prepare(
@@ -26,7 +26,7 @@ db.prepare(
     password TEXT NOT NULL
   )`,
 ).run()
-// Runs history
+
 db.prepare(
   `CREATE TABLE IF NOT EXISTS runs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,6 +38,11 @@ db.prepare(
   )`,
 ).run()
 
+try {
+  db.prepare(`ALTER TABLE runs ADD COLUMN filename TEXT`).run();
+} catch (e) {
+ }
+
 
 try {
   db.prepare(`ALTER TABLE runs ADD COLUMN updated_at DATETIME`).run();
@@ -45,7 +50,7 @@ try {
  
 }
 
-// --- Types ---
+
 interface AuthRequest extends Request {
   body: { username: string; password: string }
 }
@@ -58,7 +63,7 @@ interface CriteriaEntry {
   direction: 'max' | 'min'
 }
 
-// --- Multer Setup ---
+
 const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter: (_req, file, cb: FileFilterCallback) => {
@@ -71,7 +76,6 @@ const upload = multer({
   },
 })
 
-// --- Auth Middleware ---
 function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   const auth = req.headers.authorization
   if (!auth || !auth.startsWith('Bearer ')) {
@@ -88,9 +92,9 @@ function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   }
 }
 
-// --- Routes ---
 
-// Registration
+
+
 app.post(
   '/auth/register',
   async (req: AuthRequest, res: Response): Promise<void> => {
@@ -111,7 +115,7 @@ app.post(
   },
 )
 
-// Login
+
 app.post(
   '/auth/login',
   async (req: AuthRequest, res: Response): Promise<void> => {
@@ -137,7 +141,7 @@ app.post(
   },
 )
 
-// Preview Upload
+
 app.post(
   '/api/upload',
   upload.single('file'),
@@ -160,7 +164,7 @@ app.post(
   },
 )
 
-// Compute & Store
+
 app.post(
   '/api/compute',
   authMiddleware,
@@ -242,53 +246,92 @@ app.post(
         bestDistArr = bestDistArr.filter((r) => r.additive === maxA2)
       }
       const bestDistance = bestDistArr[0]
-      // Store run
+    
       db.prepare(
-        'INSERT INTO runs (user_id,criteria,results) VALUES (?,?,?)',
-      ).run(req.userId, critStr, JSON.stringify(results))
-      res.json({ results, bestAdditive, bestDistance })
+        'INSERT INTO runs (user_id,criteria,results,filename) VALUES (?,?,?,?)',
+      ).run(req.userId, critStr, JSON.stringify(results),file.originalname)
+      res.json({ results, bestAdditive, bestDistance, })
     } catch (err) {
       next(err)
     }
   },
 )
 
-// History
+
 app.get(
   '/api/history',
   authMiddleware,
   (req: MulterRequest, res: Response): void => {
     const rows = db
       .prepare(
-        'SELECT id, timestamp, criteria FROM runs WHERE user_id = ? ORDER BY timestamp DESC',
+        'SELECT id, timestamp,filename FROM runs WHERE user_id = ? ORDER BY timestamp DESC',
       )
       .all(req.userId)
     res.json({ history: rows })
   },
 )
 
-// History list endpoint
-app.get('/api/history', authMiddleware, (req: MulterRequest, res: Response): void => {
-  const rows = db.prepare(
-    'SELECT id, timestamp, criteria FROM runs WHERE user_id = ? ORDER BY timestamp DESC'
-  ).all((req as MulterRequest).userId);
-  res.json({ history: rows });
-});
 
-// History detail endpoint
 app.get('/api/history/:id', authMiddleware, (req: MulterRequest, res: Response): void => {
   const id = Number(req.params.id);
-  const row = db.prepare(
-    'SELECT id, timestamp, criteria, results FROM runs WHERE id = ? AND user_id = ?'
-  ).get(id, req.userId) as { id: number; timestamp: string; criteria: string; results: string } | undefined;
+  const row = db
+    .prepare(
+      `SELECT id, timestamp, filename, results 
+         FROM runs 
+        WHERE id = ? AND user_id = ?`
+    )
+    .get(id, req.userId as number) as
+      | { id: number; timestamp: string; filename: string; results: string }
+      | undefined;
+
   if (!row) {
     res.status(404).json({ error: 'Not found' });
     return;
   }
-  res.json({ history: row });
+
+  // Парсим результаты
+  const results = JSON.parse(row.results) as Array<{
+    index: number;
+    additive: number;
+    distance: number;
+  }>;
+
+  // Ищем bestAdditive
+  let bestAdditive = results[0];
+  results.forEach(r => {
+    if (
+      r.additive > bestAdditive.additive ||
+      (r.additive === bestAdditive.additive && r.distance < bestAdditive.distance)
+    ) {
+      bestAdditive = r;
+    }
+  });
+
+  // Ищем bestDistance
+  let bestDistance = results[0];
+  results.forEach(r => {
+    if (
+      r.distance < bestDistance.distance ||
+      (r.distance === bestDistance.distance && r.additive > bestDistance.additive)
+    ) {
+      bestDistance = r;
+    }
+  });
+
+  res.json({
+    history: {
+      id: row.id,
+      timestamp: row.timestamp,
+      filename: row.filename,
+      results,
+      bestAdditive,
+      bestDistance,
+    },
+  });
 });
 
-// Update history endpoint
+
+
 app.put('/api/history/:id', authMiddleware, (req: MulterRequest, res: Response): void => {
   const id = Number(req.params.id);
   const { params } = req.body;
@@ -308,13 +351,13 @@ app.put('/api/history/:id', authMiddleware, (req: MulterRequest, res: Response):
 });
 
 
-// Recompute history endpoint
+
 app.post(
   '/api/history/:id/compute',
   authMiddleware,
   (req: MulterRequest, res: Response, next: NextFunction): void => {
     const id = Number(req.params.id);
-    // 1) загрузить критерии и прошлые результаты
+  
     const row = db
       .prepare('SELECT criteria, results FROM runs WHERE id = ? AND user_id = ?')
       .get(id, req.userId) as { criteria: string; results: string } | undefined;
@@ -324,24 +367,24 @@ app.post(
     }
 
     try {
-      // 2) распарсить
+      
       const criteria = JSON.parse(row.criteria) as Record<
         string,
         { weight: number; direction: 'max' | 'min' }
       >;
       const prev = JSON.parse(row.results) as any[];
-      // 3) собрать «сырые» данные
+    
       const rawData = prev.map((r) => r.original);
       const cols = Object.keys(criteria);
 
-      // 4) вычислить min/max по столбцам
+     
       const minMax: Record<string, { min: number; max: number }> = {};
       cols.forEach((c) => {
         const vals = rawData.map((r) => Number(r[c]) || 0);
         minMax[c] = { min: Math.min(...vals), max: Math.max(...vals) };
       });
 
-      // 5) нормализация + переворот
+     
       const normalized = rawData.map((r) => {
         const nr: Record<string, number> = {};
         cols.forEach((c) => {
@@ -354,7 +397,6 @@ app.post(
         return nr;
       });
 
-      // 6) аддитивная оценка и расстояние
       const ideal = Object.fromEntries(cols.map((c) => [c, 1])) as Record<string, number>;
       const results = normalized.map((nr, i) => {
         const additive = parseFloat(
@@ -368,7 +410,7 @@ app.post(
         return { index: i, original: rawData[i], normalized: nr, additive, distance };
       });
 
-      // 7) выбор лучших
+     
       let bestAdd = results.filter((r) => r.additive === Math.max(...results.map((r) => r.additive)));
       if (bestAdd.length > 1) {
         const minD = Math.min(...bestAdd.map((r) => r.distance));
@@ -380,11 +422,11 @@ app.post(
         bestDist = bestDist.filter((r) => r.additive === maxA);
       }
 
-      // 8) сохранить
+    
       db.prepare('UPDATE runs SET results = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
         .run(JSON.stringify(results), id);
 
-      // 9) ответить
+     
       res.json({
         results,
         bestAdditive: bestAdd[0],
@@ -399,7 +441,7 @@ app.post(
 
 
 
-// Error Handler
+
 app.use((err: any, _req: Request, res: Response, _next: NextFunction): void => {
   console.error(err)
   res.status(500).json({ error: err.message || 'Internal server error' })

@@ -8,7 +8,7 @@ import { HistoryPage } from './pages/History'
 import { JSX } from 'react/jsx-runtime'
 import './styles/index.css'
 
-// Навигация
+
 const Navigation: React.FC = () => {
   const { token, logout } = useAuth()
   return (
@@ -32,19 +32,19 @@ const Navigation: React.FC = () => {
   )
 }
 
-// Защищённый маршрут
+
 const Protected: React.FC<{ children: JSX.Element }> = ({ children }) => {
   const { token } = useAuth()
   return token ? children : <Navigate to="/login" replace />
 }
 
-// Основное содержимое
+
 const AppContent: React.FC = () => {
   return (
     <>
       <Navigation />
 
-      {/* Контейнер */}
+    
       <div className="container">
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
@@ -78,7 +78,7 @@ const AppContent: React.FC = () => {
   )
 }
 
-// Корень приложения
+
 export const App: React.FC = () => (
   <AuthProvider>
     <BrowserRouter>

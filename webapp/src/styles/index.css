@@ -1,5 +1,5 @@
 
-/* 1) Заставляем весь <body> быть флекс-контейнером и растягиваться */
+
 html, body {
   height: 100%;
   margin: 0;
@@ -10,12 +10,12 @@ body {
   flex-direction: column;
 }
 
-/* 2) Основное содержимое будет расти, занимая всё свободное место */
+
 .container {
   flex: 1;
 }
 
-/* Сброс и базовые стили */
+
 * {
   margin: 0;
   padding: 0;
@@ -37,13 +37,13 @@ a:hover {
 button {
   font-family: inherit;
 }
-/* Контейнер */
+
 .container {
   max-width: 1024px;
   margin: 0 auto;
   padding: 1rem;
 }
-/* Header */
+
 .header {
   display: flex;
   align-items: center;
@@ -80,14 +80,14 @@ button {
   padding: 0.5rem 0.75rem;
   border-radius: 4px;
   cursor: pointer;
-  font: inherit; /* чтобы размер/шрифт совпадал */
+  font: inherit; 
 }
 .header nav .nav-btn:hover {
   background: #2A2A3E;
 }
 
 
-/* Footer */
+
 .footer {
   position: fixed;
   bottom: 0;

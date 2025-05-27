@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../lib/AuthContext';
-import '../styles/History.css';
 import { useNavigate } from 'react-router-dom';
+import '../styles/History.css';
 
-interface Run { id: number; timestamp: string; /* … */ }
+interface Run { id: number; timestamp: string; filename: string; }
 interface RunDetail {
   id: number;
   timestamp: string;
-  // предполагаем, что здесь лежит полный массив объектов — каждый row содержит все столбцы исходной таблицы, плюс
-  // { additive, distance }
-  results: Array<Record<string, any>>;
-  bestAdditive: any;
-  bestDistance: any;
+  filename: string;
+  results: Array<{ index: number; additive: number; distance: number }>;
+  bestAdditive: { index: number };
+  bestDistance: { index: number };
 }
 
 export const HistoryPage: React.FC = () => {
@@ -21,20 +20,18 @@ export const HistoryPage: React.FC = () => {
   const [detail, setDetail] = useState<RunDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchHistory();
-  }, []);
+  useEffect(() => { fetchHistory(); }, []);
 
   async function fetchHistory() {
     try {
       const res = await fetch('http://localhost:4000/api/history', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw await res.json();
       const { history } = await res.json();
       setHistory(history);
     } catch (err: any) {
-      setError(err.error || 'Failed to load history');
+      setError(err.error || 'Не удалось загрузить историю');
     }
   }
 
@@ -42,99 +39,69 @@ export const HistoryPage: React.FC = () => {
     setError(null);
     try {
       const res = await fetch(`http://localhost:4000/api/history/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw await res.json();
       const { history: row } = await res.json();
-      const parsed: any = JSON.parse(row.results);
-      setDetail({
-        id: row.id,
-        timestamp: row.timestamp,
-        results: parsed,                // здесь parsed — массив объектов
-        bestAdditive: parsed.bestAdditive,
-        bestDistance: parsed.bestDistance
-      });
+      setDetail(row);
     } catch (err: any) {
-      setError(err.error || 'Failed to load details');
+      setError(err.error || 'Не удалось загрузить детали');
     }
   }
 
   return (
     <div className="history-container">
-      <h2>History</h2>
+      <h2>История</h2>
       {error && <div className="error">{error}</div>}
 
       <table className="history-table">
         <thead>
-          <tr><th>ID</th><th>Timestamp</th><th>Actions</th></tr>
+          <tr><th>ID</th><th>Дата</th><th>Файл</th><th>Действия</th></tr>
         </thead>
         <tbody>
-          {history.map(run => (
-            <tr key={run.id}>
-              <td>{run.id}</td>
-              <td>{new Date(run.timestamp).toLocaleString()}</td>
+          {history.map(r => (
+            <tr key={r.id}>
+              <td>{r.id}</td>
+              <td>{new Date(r.timestamp).toLocaleString()}</td>
+              <td>{r.filename || '—'}</td>
               <td>
-                <button onClick={() => loadDetail(run.id)}>View</button>
-                <button onClick={() => navigate(`/upload?runId=${run.id}`)}>Recompute</button>
+                <button onClick={() => loadDetail(r.id)}>View</button>
+                <button onClick={() => navigate(`/upload?runId=${r.id}`)}>
+                  Recompute
+                </button>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* --- модальное окно деталей --- */}
       {detail && (
-        <div className="modal-overlay" onClick={() => setDetail(null)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setDetail(null)}>×</button>
-            <h3>Details for Run #{detail.id}</h3>
-            <p><strong>Timestamp:</strong> {new Date(detail.timestamp).toLocaleString()}</p>
-
-            {/* 1) Полная исходная таблица */}
-            <div className="table-wrapper">
-              <h4>Full Data</h4>
-              <table className="base-table">
-                <thead>
-                  <tr>
-                    {Object.keys(detail.results[0]).map(col => (
-                      // не рисуем в шапке поля bestAdditive/bestDistance
-                      col === 'bestAdditive' || col === 'bestDistance' ? null : 
-                      <th key={col}>{col}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {detail.results.map((row, i) => (
-                    <tr key={i} className={i % 2 === 0 ? 'even' : 'odd'}>
-                      {Object.entries(row).map(([col, val]) =>
-                        (col === 'bestAdditive' || col === 'bestDistance') ? null :
-                        <td key={col}>{val}</td>
-                      )}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* 2) Результирующая табличка */}
-            <div className="table-wrapper results-section">
-              <h4>Results</h4>
-              <table className="result-table">
-                <thead>
-                  <tr><th>Index</th><th>Additive</th><th>Distance</th></tr>
-                </thead>
-                <tbody>
-                  {detail.results.map((r, i) => (
-                    <tr key={i} className={i === detail.bestAdditive.index || i === detail.bestDistance.index ? 'highlight' : ''}>
-                      <td>{r.index}</td>
-                      <td>{r.additive.toFixed(3)}</td>
-                      <td>{r.distance.toFixed(3)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        <div className="detail-section">
+          <h3>Файл отчёта: {detail.filename || '—'}</h3>
+          <h4>Итоговые результаты</h4>
+          <table className="result-table">
+            <thead>
+              <tr><th>#</th><th>Additive</th><th>Distance</th></tr>
+            </thead>
+            <tbody>
+              {detail.results.map(r => (
+                <tr
+                  key={r.index}
+                  className={
+                    r.index === detail.bestAdditive.index
+                      ? 'highlight-additive'
+                      : r.index === detail.bestDistance.index
+                        ? 'highlight-distance'
+                        : ''
+                  }
+                >
+                  <td>{r.index}</td>
+                  <td>{r.additive.toFixed(3)}</td>
+                  <td>{r.distance.toFixed(3)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

@@ -39,7 +39,7 @@ export const UploadPreview: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // 1) Сбросить стейт, когда переключились из редактирования обратно на upload
+  
   useEffect(() => {
     if (!isEditing) {
       setStep('upload')
@@ -54,7 +54,7 @@ export const UploadPreview: React.FC = () => {
     }
   }, [isEditing])
 
-  // 2) Если редактирование — подтягиваем run по runId
+  
   useEffect(() => {
     if (!isEditing) return
     setLoading(true)
@@ -113,7 +113,7 @@ export const UploadPreview: React.FC = () => {
       setHeaders(headers)
       setPreview(preview)
 
-      // инициализация критериев равномерными весами и направлением max
+
       const w = parseFloat((1 / headers.length).toFixed(1))
       const init: Criteria = {}
       headers.forEach((h:any) => {
@@ -150,7 +150,7 @@ export const UploadPreview: React.FC = () => {
     try {
       let res: Response
       if (isEditing) {
-        // пересчёт существующего run
+     
         res = await fetch(
           `http://localhost:4000/api/history/${runId}/compute`,
           {
@@ -159,7 +159,7 @@ export const UploadPreview: React.FC = () => {
           }
         )
       } else {
-        // новый расчёт
+       
         const form = new FormData()
         form.append('file', file as File)
         form.append('criteria', JSON.stringify(criteria))
@@ -245,7 +245,7 @@ export const UploadPreview: React.FC = () => {
           </table>
         </div>
 
-        {/* Кнопка назад */}
+      
         <button
           className="back-button"
           onClick={() => navigate('/history')}
