@@ -1,12 +1,10 @@
-
 .upload-wrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1;           
+  flex: 1;
   padding: 2rem;
 }
-
 
 .upload-card {
   background: rgba(32, 34, 37, 0.85);
@@ -14,16 +12,15 @@
   border-radius: 12px;
 
   width: 100%;
-  max-width: 800px;      
-  padding: 2.5rem 3.5rem;     
-  box-shadow: 0 8px 24px rgba(0,0,0,0.7);
-  border: 1px solid rgba(255,255,255,0.1);
+  max-width: 800px;
+  padding: 2.5rem 3.5rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   animation: fadeInUp 0.5s ease-out;
 }
 
-
 .upload-card h1 {
-  color: #EAEAEA;
+  color: #eaeaea;
   margin-bottom: 1.5rem;
   font-size: 1.75rem;
   text-align: center;
@@ -31,7 +28,7 @@
 }
 
 .upload-card h1::after {
-  content: "";
+  content: '';
   position: absolute;
   bottom: -0.5rem;
   left: 50%;
@@ -42,26 +39,22 @@
   background: linear-gradient(90deg, #6b73ff, #000dff);
 }
 
-
 .upload-container {
   display: none;
 }
-
 
 .upload-form h1 {
   font-size: 1.5rem;
   margin-bottom: 1rem;
 }
 
-
-.upload-form .upload-input-wrapper input[type="file"] {
+.upload-form .upload-input-wrapper input[type='file'] {
   position: absolute;
   width: 1px;
   height: 1px;
   opacity: 0;
   pointer-events: none;
 }
-
 
 .upload-form .upload-input-wrapper label {
   cursor: pointer;
@@ -76,13 +69,11 @@
   background: #2b6cb0;
 }
 
-
 .upload-form .upload-input-wrapper span {
   color: #ccc;
   font-size: 0.9rem;
   user-select: none;
 }
-
 
 .upload-form .upload-button {
   width: 100%;
@@ -104,43 +95,46 @@
 }
 
 .error {
-  color: #E53E3E;
+  color: #e53e3e;
   margin-top: 0.5rem;
 }
-
 
 .table-container {
   margin-top: 2rem;
   overflow-x: auto;
-  background: #1E1E2A;
-  border: 1px solid #2A2A3E;
+  background: #1e1e2a;
+  border: 1px solid #2a2a3e;
   border-radius: 6px;
   padding: 1rem;
 }
 .preview-table {
   width: 100%;
   border-collapse: collapse;
-  color: #EAEAEA;
+  color: #eaeaea;
 }
 .preview-table th,
 .preview-table td {
-  border: 1px solid #3A3A4E;
+  border: 1px solid #3a3a4e;
   padding: 0.5rem;
   text-align: center;
 }
 .preview-table thead {
-  background: #2A2A3E;
+  background: #2a2a3e;
 }
 .preview-table tbody tr:nth-child(even) {
   background: #252533;
 }
 .preview-table tbody tr:nth-child(odd) {
-  background: #1E1E2A;
+  background: #1e1e2a;
 }
-
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-

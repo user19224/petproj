@@ -8,7 +8,6 @@ import { HistoryPage } from './pages/History'
 import { JSX } from 'react/jsx-runtime'
 import './styles/index.css'
 
-
 const Navigation: React.FC = () => {
   const { token, logout } = useAuth()
   return (
@@ -19,7 +18,9 @@ const Navigation: React.FC = () => {
           <>
             <Link to="/upload">Калькулятор</Link>
             <Link to="/history">История</Link>
-            <button className = "nav-btn" onClick={logout}>Выход</button>
+            <button className="nav-btn" onClick={logout}>
+              Выход
+            </button>
           </>
         ) : (
           <>
@@ -32,19 +33,16 @@ const Navigation: React.FC = () => {
   )
 }
 
-
 const Protected: React.FC<{ children: JSX.Element }> = ({ children }) => {
   const { token } = useAuth()
   return token ? children : <Navigate to="/login" replace />
 }
-
 
 const AppContent: React.FC = () => {
   return (
     <>
       <Navigation />
 
-    
       <div className="container">
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
@@ -72,12 +70,18 @@ const AppContent: React.FC = () => {
 
       {/* Подвал */}
       <footer className="footer">
-        © 2025 • <a href="https://github.com/user19224" target="_blank" rel="noopener noreferrer">GitHub</a>
+        © 2025 •{' '}
+        <a
+          href="https://github.com/user19224"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          GitHub
+        </a>
       </footer>
     </>
   )
 }
-
 
 export const App: React.FC = () => (
   <AuthProvider>
@@ -86,4 +90,3 @@ export const App: React.FC = () => (
     </BrowserRouter>
   </AuthProvider>
 )
-

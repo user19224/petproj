@@ -1,50 +1,45 @@
-
 .auth-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  flex: 1;             
+  flex: 1;
   padding: 1rem;
 }
 
-
 .auth-card {
-  background: #1E1E2A;
-  border: 1px solid #2A2A3E;
+  background: #1e1e2a;
+  border: 1px solid #2a2a3e;
   border-radius: 8px;
   padding: 2rem;
   width: 100%;
   max-width: 360px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
-
 
 .auth-card h1 {
   margin-bottom: 1.5rem;
   font-size: 1.5rem;
-  color: #EAEAEA;
+  color: #eaeaea;
   text-align: center;
 }
 
-
-.auth-card input[type="text"],
-.auth-card input[type="password"] {
+.auth-card input[type='text'],
+.auth-card input[type='password'] {
   width: 100%;
   padding: 0.75rem;
   margin-bottom: 1rem;
-  border: 1px solid #3A3A4E;
+  border: 1px solid #3a3a4e;
   border-radius: 4px;
-  background: #2A2A3E;
-  color: #EAEAEA;
+  background: #2a2a3e;
+  color: #eaeaea;
   font-size: 1rem;
 }
-
 
 .auth-card button {
   width: 100%;
   padding: 0.75rem;
-  background: #3182CE;
-  color: #FFF;
+  background: #3182ce;
+  color: #fff;
   border: none;
   border-radius: 4px;
   font-size: 1rem;
@@ -52,9 +47,8 @@
   transition: background 0.2s;
 }
 .auth-card button:hover {
-  background: #2B6CB0;
+  background: #2b6cb0;
 }
-
 
 .auth-card .switch-link {
   margin-top: 1rem;
@@ -62,16 +56,14 @@
   font-size: 0.9rem;
 }
 .auth-card .switch-link a {
-  color: #63B3ED;
+  color: #63b3ed;
 }
 .auth-card .switch-link a:hover {
-  color: #3182CE;
+  color: #3182ce;
 }
 
-
 .auth-card .error {
-  color: #E53E3E;
+  color: #e53e3e;
   margin-bottom: 1rem;
   text-align: center;
 }
-

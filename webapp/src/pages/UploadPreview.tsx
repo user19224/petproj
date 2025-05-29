@@ -1,9 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  ChangeEvent,
-  FormEvent
-} from 'react'
+import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react'
 import { useAuth } from '../lib/AuthContext'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import '../styles/UploadPreview.css'
@@ -27,7 +22,7 @@ export const UploadPreview: React.FC = () => {
   const navigate = useNavigate()
 
   const [step, setStep] = useState<'upload' | 'weights' | 'results'>(
-    isEditing ? 'weights' : 'upload'
+    isEditing ? 'weights' : 'upload',
   )
   const [file, setFile] = useState<File | null>(null)
   const [headers, setHeaders] = useState<string[]>([])
@@ -39,7 +34,6 @@ export const UploadPreview: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  
   useEffect(() => {
     if (!isEditing) {
       setStep('upload')
@@ -54,36 +48,50 @@ export const UploadPreview: React.FC = () => {
     }
   }, [isEditing])
 
-  
   useEffect(() => {
     if (!isEditing) return
     setLoading(true)
+
     fetch(`http://localhost:4000/api/history/${runId}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then(res => {
-        if (!res.ok) throw res
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load run for editing')
         return res.json()
       })
-      .then(data => {
+      .then((data) => {
         const row = data.history
-        const parsed = JSON.parse(row.results) as Array<{
+
+        // 1) criteria приходит в виде строки JSON, парсим его
+        const serverCriteria: Criteria = JSON.parse(row.criteria)
+        setCriteria(serverCriteria)
+
+        // 2) results — это полный массив из бэка, с original внутри
+        const fullResults = row.results as Array<{
           original: PreviewRow
+          normalized: Record<string, number>
+          additive: number
+          distance: number
+          index: number
         }>
-        const raw = parsed.map(r => r.original)
-        if (raw.length) {
-          setHeaders(Object.keys(raw[0]))
-          setPreview(raw.slice(0, 5))
-          setCriteria(JSON.parse(row.criteria))
-          setStep('weights')
-        }
+
+        // вытаскиваем только «оригинал» для preview
+        const raw = fullResults.map((r) => r.original)
+        setHeaders(Object.keys(raw[0]))
+        setPreview(raw.slice(0, 5))
+
+        setResults(fullResults)
+        setBestAdditive(row.bestAdditive)
+        setBestDistance(row.bestDistance)
+
+        setStep('weights')
       })
-      .catch((err: any) =>
-        setError(err.error || 'Failed to load run for editing')
-      )
+      .catch((err) => {
+        console.error(err)
+        setError('Failed to load run for editing')
+      })
       .finally(() => setLoading(false))
   }, [isEditing, runId, token])
-
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     setError(null)
     if (e.target.files && e.target.files.length > 0) {
@@ -113,10 +121,9 @@ export const UploadPreview: React.FC = () => {
       setHeaders(headers)
       setPreview(preview)
 
-
       const w = parseFloat((1 / headers.length).toFixed(1))
       const init: Criteria = {}
-      headers.forEach((h:any) => {
+      headers.forEach((h: any) => {
         init[h] = { weight: w, direction: 'max' }
       })
       setCriteria(init)
@@ -129,13 +136,13 @@ export const UploadPreview: React.FC = () => {
   }
 
   const handleWeightChange = (col: string, val: number) => {
-    setCriteria(prev => ({
+    setCriteria((prev) => ({
       ...prev,
       [col]: { ...prev[col], weight: val },
     }))
   }
   const handleDirectionToggle = (col: string) => {
-    setCriteria(prev => ({
+    setCriteria((prev) => ({
       ...prev,
       [col]: {
         ...prev[col],
@@ -150,16 +157,14 @@ export const UploadPreview: React.FC = () => {
     try {
       let res: Response
       if (isEditing) {
-     
         res = await fetch(
           `http://localhost:4000/api/history/${runId}/compute`,
           {
             method: 'POST',
             headers: { Authorization: `Bearer ${token}` },
-          }
+          },
         )
       } else {
-       
         const form = new FormData()
         form.append('file', file as File)
         form.append('criteria', JSON.stringify(criteria))
@@ -186,150 +191,153 @@ export const UploadPreview: React.FC = () => {
   }
 
   if (step === 'results') {
+    return (
+      <div className="upload-wrapper">
+        <div className="results-card">
+          <h1>Results</h1>
+
+          {/* Карточки Best by */}
+          <div className="best-cards">
+            <div className="best-card">
+              <span className="icon">🏆</span>
+              <span>
+                Best by Additive: #{bestAdditive.index + 2} (score=
+                {bestAdditive.additive})
+              </span>
+            </div>
+            <div className="best-card">
+              <span className="icon">🏆</span>
+              <span>
+                Best by Distance: #{bestDistance.index + 2} (distance=
+                {bestDistance.distance})
+              </span>
+            </div>
+          </div>
+
+          {/* Таблица с фиксированным хедом */}
+          <div className="table-wrapper">
+            <table className="results-table">
+              <thead>
+                <tr>
+                  <th>Index</th>
+                  {headers.map((h) => (
+                    <th key={h}>{h}</th>
+                  ))}
+                  {headers.map((h) => (
+                    <th key={`n-${h}`}>{`Norm ${h}`}</th>
+                  ))}
+                  <th>Additive</th>
+                  <th>Distance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.map((r) => (
+                  <tr
+                    key={r.index}
+                    className={
+                      r.index === bestAdditive.index
+                        ? 'highlight-additive'
+                        : r.index === bestDistance.index
+                          ? 'highlight-distance'
+                          : ''
+                    }
+                  >
+                    <td>{r.index + 2}</td>
+                    {headers.map((h) => (
+                      <td key={h}>{r.original[h]}</td>
+                    ))}
+                    {headers.map((h) => (
+                      <td key={`n-${h}`}>{r.normalized[h].toFixed(3)}</td>
+                    ))}
+                    <td>{r.additive}</td>
+                    <td>{r.distance}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <button className="back-button" onClick={() => navigate('/history')}>
+            Back to History
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="upload-wrapper">
-      <div className="results-card">
-        <h1>Results</h1>
+      <div className="upload-card">
+        {step === 'upload' && !isEditing && (
+          <>
+            <h1>Upload Excel</h1>
+            <form onSubmit={handleUpload} className="upload-form">
+              <div className="upload-input-wrapper">
+                <label htmlFor="file">Выберите файл</label>
+                <input
+                  id="file"
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFileChange}
+                />
+                <span>{file ? file.name : 'Файл не выбран'}</span>
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="upload-button"
+              >
+                {loading ? 'Uploading...' : 'Upload & Next'}
+              </button>
+              {error && <div className="error">{error}</div>}
+            </form>
+          </>
+        )}
 
-        {/* Карточки Best by */}
-        <div className="best-cards">
-          <div className="best-card">
-            <span className="icon">🏆</span>
-            <span>Best by Additive: #{bestAdditive.index} (score={bestAdditive.additive})</span>
-          </div>
-          <div className="best-card">
-            <span className="icon">🏆</span>
-            <span>Best by Distance: #{bestDistance.index} (distance={bestDistance.distance})</span>
-          </div>
-        </div>
-
-        {/* Таблица с фиксированным хедом */}
-        <div className="table-wrapper">
-          <table className="results-table">
-            <thead>
-              <tr>
-                <th>Index</th>
-                {headers.map((h) => (
-                  <th key={h}>{h}</th>
-                ))}
-                {headers.map((h) => (
-                  <th key={`n-${h}`}>{`Norm ${h}`}</th>
-                ))}
-                <th>Additive</th>
-                <th>Distance</th>
-              </tr>
-            </thead>
-            <tbody>
-              {results.map((r) => (
-                <tr
-                  key={r.index}
-                  className={
-                    r.index === bestAdditive.index ||
-                    r.index === bestDistance.index
-                      ? 'highlight'
-                      : ''
-                  }
-                >
-                  <td>{r.index}</td>
-                  {headers.map((h) => (
-                    <td key={h}>{r.original[h]}</td>
-                  ))}
-                  {headers.map((h) => (
-                    <td key={`n-${h}`}>{r.normalized[h].toFixed(3)}</td>
-                  ))}
-                  <td>{r.additive}</td>
-                  <td>{r.distance}</td>
-                </tr>
+        {step === 'weights' && (
+          <>
+            <h1>Setup Criteria</h1>
+            {error && <div className="error">{error}</div>}
+            <div className="weights-container">
+              {headers.map((col) => (
+                <div key={col} className="weight-row">
+                  <span>{col}</span>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.1}
+                    value={criteria[col].weight}
+                    onChange={(e) =>
+                      handleWeightChange(col, parseFloat(e.target.value))
+                    }
+                  />
+                  <span>{criteria[col].weight.toFixed(1)}</span>
+                  <button
+                    className="toggle-button"
+                    onClick={() => handleDirectionToggle(col)}
+                  >
+                    {criteria[col].direction === 'max' ? '↑' : '↓'}
+                  </button>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
-
-      
-        <button
-          className="back-button"
-          onClick={() => navigate('/history')}
-        >
-          Back to History
-        </button>
-      </div>
-    </div>
-  );
-}
-
-return (
-  <div className="upload-wrapper">
-    <div className="upload-card">
-      {step === 'upload' && !isEditing && (
-        <>
-          <h1>Upload Excel</h1>
-          <form onSubmit={handleUpload} className="upload-form">
-            <div className="upload-input-wrapper">
-              <label htmlFor="file">Выберите файл</label>
-              <input
-                id="file"
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleFileChange}
-              />
-              <span>{file ? file.name : 'Файл не выбран'}</span>
             </div>
             <button
-              type="submit"
+              className="upload-button compute-button"
+              onClick={handleCompute}
               disabled={loading}
-              className="upload-button"
             >
-              {loading ? 'Uploading...' : 'Upload & Next'}
+              {loading
+                ? isEditing
+                  ? 'Recomputing...'
+                  : 'Computing...'
+                : isEditing
+                  ? 'Recompute'
+                  : 'Compute'}
             </button>
-            {error && <div className="error">{error}</div>}
-          </form>
-        </>
-      )}
-
-      {step === 'weights' && (
-        <>
-          <h1>Setup Criteria</h1>
-          {error && <div className="error">{error}</div>}
-          <div className="weights-container">
-            {headers.map(col => (
-              <div key={col} className="weight-row">
-                <span>{col}</span>
-                <input
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  value={criteria[col].weight}
-                  onChange={e =>
-                    handleWeightChange(col, parseFloat(e.target.value))
-                  }
-                />
-                <span>{criteria[col].weight.toFixed(1)}</span>
-                <button
-                  className="toggle-button"
-                  onClick={() => handleDirectionToggle(col)}
-                >
-                  {criteria[col].direction === 'max' ? '↑' : '↓'}
-                </button>
-              </div>
-            ))}
-          </div>
-          <button
-            className="upload-button compute-button"
-            onClick={handleCompute}
-            disabled={loading}
-          >
-            {loading
-              ? (isEditing ? 'Recomputing...' : 'Computing...')
-              : (isEditing ? 'Recompute' : 'Compute')}
-          </button>
-        </>
-      )}
+          </>
+        )}
+      </div>
     </div>
-  </div>
-)
-
-
-
- }
-
+  )
+}

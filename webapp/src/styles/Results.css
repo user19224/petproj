@@ -1,24 +1,21 @@
-
 .results-container {
   display: flex;
   justify-content: center;
   padding: 2rem;
-  flex: 1; 
+  flex: 1;
 }
-
 
 .results-card {
   background: rgba(32, 34, 37, 0.85);
   backdrop-filter: blur(8px);
   border-radius: 12px;
-  padding: 2.5rem 4rem;        
-  width: 66vw;                 
-  max-width: 1000px;           
-  box-shadow: 0 8px 24px rgba(0,0,0,0.7);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: #EAEAEA;
+  padding: 2.5rem 4rem;
+  width: 66vw;
+  max-width: 1000px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #eaeaea;
 }
-
 
 .best-cards {
   display: flex;
@@ -27,7 +24,6 @@
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
 }
-
 
 .best-card {
   display: inline-flex;
@@ -47,14 +43,12 @@
   font-size: 1.2rem;
 }
 
-
 .table-wrapper {
   max-height: 80vh;
   overflow: auto;
   border: 1px solid rgba(58, 64, 83, 0.7);
   border-radius: 6px;
 }
-
 
 .results-table {
   width: 100%;
@@ -67,15 +61,13 @@
   text-align: center;
 }
 
-
 .results-table thead th {
   position: sticky;
   top: 0;
-  background: linear-gradient(90deg, #2A2A3E, #1E1E2A);
-  color: #F7FAFC;
+  background: linear-gradient(90deg, #2a2a3e, #1e1e2a);
+  color: #f7fafc;
   z-index: 2;
 }
-
 
 .results-table tbody tr:nth-child(even) {
   background: rgba(58, 64, 83, 0.6);
@@ -84,19 +76,24 @@
   background: rgba(32, 34, 37, 0.6);
 }
 
-.results-table tr.highlight {
+.results-table tr.highlight-additive {
   background: rgba(72, 187, 120, 0.6) !important;
   transform: scale(1.01);
   transition: transform 0.2s;
 }
 
+.results-table tr.highlight-distance {
+  background: rgba(255, 165, 0, 0.6) !important;
+  transform: scale(1.01);
+  transition: transform 0.2s;
+}
 
 .back-button {
   display: block;
   width: 100%;
   margin-top: 1.5rem;
   padding: 0.75rem;
-  background: linear-gradient(90deg, #4B6CB7, #182848);
+  background: linear-gradient(90deg, #4b6cb7, #182848);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -105,6 +102,5 @@
   transition: background 0.3s;
 }
 .back-button:hover {
-  background: linear-gradient(90deg, #182848, #4B6CB7);
+  background: linear-gradient(90deg, #182848, #4b6cb7);
 }
-

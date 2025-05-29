@@ -1,6 +1,6 @@
 .weights-container {
-  background: #1E1E2A;
-  border: 1px solid #2A2A3E;
+  background: #1e1e2a;
+  border: 1px solid #2a2a3e;
   border-radius: 8px;
   padding: 2rem;
   margin-top: 2rem;
@@ -17,7 +17,7 @@
 }
 .weight-row span {
   width: 6rem;
-  color: #EAEAEA;
+  color: #eaeaea;
 }
 .weight-row input[type='range'] {
   flex: 1;
@@ -26,20 +26,20 @@
 }
 .weight-row input[type='range']::-webkit-slider-runnable-track {
   height: 8px;
-  background: #3A3A4E;
+  background: #3a3a4e;
   border-radius: 4px;
 }
 .weight-row input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 16px;
   height: 16px;
-  background: #3182CE;
+  background: #3182ce;
   border-radius: 50%;
   margin-top: -4px;
   cursor: pointer;
 }
 .toggle-button {
-  background: #3182CE;
+  background: #3182ce;
   color: white;
   border: none;
   border-radius: 4px;
@@ -49,7 +49,7 @@
   transition: background 0.2s;
 }
 .toggle-button:hover {
-  background: #2B6CB0;
+  background: #2b6cb0;
 }
 
 .upload-button {
@@ -58,13 +58,11 @@
   width: 100%;
 }
 
-
-
 .weights-container .upload-button {
   display: block;
   width: 100%;
   padding: 0.75rem;
-  background: linear-gradient(90deg, #4B6CB7, #182848);
+  background: linear-gradient(90deg, #4b6cb7, #182848);
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -74,37 +72,34 @@
   margin-top: 1.5rem;
 }
 .weights-container .upload-button:hover:not(:disabled) {
-  background: linear-gradient(90deg, #182848, #4B6CB7);
+  background: linear-gradient(90deg, #182848, #4b6cb7);
 }
 .weights-container .upload-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-
-
-
 .compute-button {
-  display: block;             
-  width: 100%;                  
-  margin-top: 1.5rem;          
-  padding: 0.75rem;             
+  display: block;
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 0.75rem;
   font-size: 1rem;
-  background: linear-gradient(90deg, #4B6CB7, #182848);
+  background: linear-gradient(90deg, #4b6cb7, #182848);
   color: #fff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: background 0.3s, opacity 0.2s;
+  transition:
+    background 0.3s,
+    opacity 0.2s;
 }
 
 .compute-button:hover:not(:disabled) {
-  background: linear-gradient(90deg, #182848, #4B6CB7);
+  background: linear-gradient(90deg, #182848, #4b6cb7);
 }
 
 .compute-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
-
-

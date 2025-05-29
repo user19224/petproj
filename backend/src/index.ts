@@ -7,15 +7,12 @@ import Database from 'better-sqlite3'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
-
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret'
 const PORT = process.env.PORT || 4000
 const app = express()
 
-
 app.use(cors())
 app.use(express.json())
-
 
 const db = new Database('app.db')
 // Users
@@ -39,17 +36,12 @@ db.prepare(
 ).run()
 
 try {
-  db.prepare(`ALTER TABLE runs ADD COLUMN filename TEXT`).run();
-} catch (e) {
- }
-
+  db.prepare(`ALTER TABLE runs ADD COLUMN filename TEXT`).run()
+} catch (e) {}
 
 try {
-  db.prepare(`ALTER TABLE runs ADD COLUMN updated_at DATETIME`).run();
-} catch (e) {
- 
-}
-
+  db.prepare(`ALTER TABLE runs ADD COLUMN updated_at DATETIME`).run()
+} catch (e) {}
 
 interface AuthRequest extends Request {
   body: { username: string; password: string }
@@ -62,7 +54,6 @@ interface CriteriaEntry {
   weight: number
   direction: 'max' | 'min'
 }
-
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -92,9 +83,6 @@ function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   }
 }
 
-
-
-
 app.post(
   '/auth/register',
   async (req: AuthRequest, res: Response): Promise<void> => {
@@ -114,7 +102,6 @@ app.post(
     }
   },
 )
-
 
 app.post(
   '/auth/login',
@@ -141,7 +128,6 @@ app.post(
   },
 )
 
-
 app.post(
   '/api/upload',
   upload.single('file'),
@@ -163,7 +149,6 @@ app.post(
     }
   },
 )
-
 
 app.post(
   '/api/compute',
@@ -246,17 +231,16 @@ app.post(
         bestDistArr = bestDistArr.filter((r) => r.additive === maxA2)
       }
       const bestDistance = bestDistArr[0]
-    
+
       db.prepare(
         'INSERT INTO runs (user_id,criteria,results,filename) VALUES (?,?,?,?)',
-      ).run(req.userId, critStr, JSON.stringify(results),file.originalname)
-      res.json({ results, bestAdditive, bestDistance, })
+      ).run(req.userId, critStr, JSON.stringify(results), file.originalname)
+      res.json({ results, bestAdditive, bestDistance })
     } catch (err) {
       next(err)
     }
   },
 )
-
 
 app.get(
   '/api/history',
@@ -271,176 +255,198 @@ app.get(
   },
 )
 
-
-app.get('/api/history/:id', authMiddleware, (req: MulterRequest, res: Response): void => {
-  const id = Number(req.params.id);
-  const row = db
-    .prepare(
-      `SELECT id, timestamp, filename, results 
+app.get(
+  '/api/history/:id',
+  authMiddleware,
+  (req: MulterRequest, res: Response): void => {
+    const id = Number(req.params.id)
+    const row = db
+      .prepare(
+        `SELECT id, timestamp, filename, criteria,results 
          FROM runs 
-        WHERE id = ? AND user_id = ?`
-    )
-    .get(id, req.userId as number) as
-      | { id: number; timestamp: string; filename: string; results: string }
-      | undefined;
+        WHERE id = ? AND user_id = ?`,
+      )
+      .get(id, req.userId as number) as
+      | {
+          id: number
+          timestamp: string
+          filename: string
+          criteria: string
+          results: string
+        }
+      | undefined
 
-  if (!row) {
-    res.status(404).json({ error: 'Not found' });
-    return;
-  }
-
-  // Парсим результаты
-  const results = JSON.parse(row.results) as Array<{
-    index: number;
-    additive: number;
-    distance: number;
-  }>;
-
-  // Ищем bestAdditive
-  let bestAdditive = results[0];
-  results.forEach(r => {
-    if (
-      r.additive > bestAdditive.additive ||
-      (r.additive === bestAdditive.additive && r.distance < bestAdditive.distance)
-    ) {
-      bestAdditive = r;
+    if (!row) {
+      res.status(404).json({ error: 'Not found' })
+      return
     }
-  });
 
-  // Ищем bestDistance
-  let bestDistance = results[0];
-  results.forEach(r => {
-    if (
-      r.distance < bestDistance.distance ||
-      (r.distance === bestDistance.distance && r.additive > bestDistance.additive)
-    ) {
-      bestDistance = r;
+    // Парсим результаты
+    const results = JSON.parse(row.results) as Array<{
+      index: number
+      original: Record<string, any>
+      normalized: Record<string, number>
+      additive: number
+      distance: number
+    }>
+
+    // Ищем bestAdditive
+    let bestAdditive = results[0]
+    results.forEach((r) => {
+      if (
+        r.additive > bestAdditive.additive ||
+        (r.additive === bestAdditive.additive &&
+          r.distance < bestAdditive.distance)
+      ) {
+        bestAdditive = r
+      }
+    })
+
+    // Ищем bestDistance
+    let bestDistance = results[0]
+    results.forEach((r) => {
+      if (
+        r.distance < bestDistance.distance ||
+        (r.distance === bestDistance.distance &&
+          r.additive > bestDistance.additive)
+      ) {
+        bestDistance = r
+      }
+    })
+
+    res.json({
+      history: {
+        id: row.id,
+        timestamp: row.timestamp,
+        filename: row.filename,
+        criteria: row.criteria,
+        results,
+        bestAdditive,
+        bestDistance,
+      },
+    })
+  },
+)
+
+app.put(
+  '/api/history/:id',
+  authMiddleware,
+  (req: MulterRequest, res: Response): void => {
+    const id = Number(req.params.id)
+    const { params } = req.body
+    if (typeof params !== 'object') {
+      res.status(400).json({ error: 'Invalid params' })
+      return
     }
-  });
-
-  res.json({
-    history: {
-      id: row.id,
-      timestamp: row.timestamp,
-      filename: row.filename,
-      results,
-      bestAdditive,
-      bestDistance,
-    },
-  });
-});
-
-
-
-app.put('/api/history/:id', authMiddleware, (req: MulterRequest, res: Response): void => {
-  const id = Number(req.params.id);
-  const { params } = req.body;
-  if (typeof params !== 'object') {
-    res.status(400).json({ error: 'Invalid params' });
-    return;
-  }
-  const exists = db.prepare('SELECT 1 FROM runs WHERE id = ? AND user_id = ?').get(id, req.userId);
-  if (!exists) {
-    res.status(404).json({ error: 'Not found' });
-    return;
-  }
-  db.prepare(
-    'UPDATE runs SET criteria = ?, results = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
-  ).run(JSON.stringify(params), JSON.stringify([]), id);
-  res.json({ message: 'Parameters updated' });
-});
-
-
+    const exists = db
+      .prepare('SELECT 1 FROM runs WHERE id = ? AND user_id = ?')
+      .get(id, req.userId)
+    if (!exists) {
+      res.status(404).json({ error: 'Not found' })
+      return
+    }
+    db.prepare(
+      'UPDATE runs SET criteria = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    ).run(JSON.stringify(params), id)
+    res.json({ message: 'Parameters updated' })
+  },
+)
 
 app.post(
   '/api/history/:id/compute',
   authMiddleware,
   (req: MulterRequest, res: Response, next: NextFunction): void => {
-    const id = Number(req.params.id);
-  
+    const id = Number(req.params.id)
+
     const row = db
-      .prepare('SELECT criteria, results FROM runs WHERE id = ? AND user_id = ?')
-      .get(id, req.userId) as { criteria: string; results: string } | undefined;
+      .prepare(
+        'SELECT criteria, results FROM runs WHERE id = ? AND user_id = ?',
+      )
+      .get(id, req.userId) as { criteria: string; results: string } | undefined
     if (!row) {
-      res.status(404).json({ error: 'Not found' });
-      return;
+      res.status(404).json({ error: 'Not found' })
+      return
     }
 
     try {
-      
       const criteria = JSON.parse(row.criteria) as Record<
         string,
         { weight: number; direction: 'max' | 'min' }
-      >;
-      const prev = JSON.parse(row.results) as any[];
-    
-      const rawData = prev.map((r) => r.original);
-      const cols = Object.keys(criteria);
+      >
+      const prev = JSON.parse(row.results) as any[]
 
-     
-      const minMax: Record<string, { min: number; max: number }> = {};
+      const rawData = prev.map((r) => r.original)
+      const cols = Object.keys(criteria)
+
+      const minMax: Record<string, { min: number; max: number }> = {}
       cols.forEach((c) => {
-        const vals = rawData.map((r) => Number(r[c]) || 0);
-        minMax[c] = { min: Math.min(...vals), max: Math.max(...vals) };
-      });
+        const vals = rawData.map((r) => Number(r[c]) || 0)
+        minMax[c] = { min: Math.min(...vals), max: Math.max(...vals) }
+      })
 
-     
       const normalized = rawData.map((r) => {
-        const nr: Record<string, number> = {};
+        const nr: Record<string, number> = {}
         cols.forEach((c) => {
-          let v = Number(r[c]) || 0;
-          const { min, max } = minMax[c];
-          let z = max > min ? (v - min) / (max - min) : 0;
-          if (criteria[c].direction === 'min') z = 1 - z;
-          nr[c] = parseFloat(z.toFixed(4));
-        });
-        return nr;
-      });
+          let v = Number(r[c]) || 0
+          const { min, max } = minMax[c]
+          let z = max > min ? (v - min) / (max - min) : 0
+          if (criteria[c].direction === 'min') z = 1 - z
+          nr[c] = parseFloat(z.toFixed(4))
+        })
+        return nr
+      })
 
-      const ideal = Object.fromEntries(cols.map((c) => [c, 1])) as Record<string, number>;
+      const ideal = Object.fromEntries(cols.map((c) => [c, 1])) as Record<
+        string,
+        number
+      >
       const results = normalized.map((nr, i) => {
         const additive = parseFloat(
-          cols.reduce((s, c) => s + nr[c] * criteria[c].weight, 0).toFixed(4)
-        );
+          cols.reduce((s, c) => s + nr[c] * criteria[c].weight, 0).toFixed(4),
+        )
         const distance = parseFloat(
           Math.sqrt(
-            cols.reduce((s, c) => s + Math.pow(ideal[c] - nr[c], 2), 0)
-          ).toFixed(4)
-        );
-        return { index: i, original: rawData[i], normalized: nr, additive, distance };
-      });
+            cols.reduce((s, c) => s + Math.pow(ideal[c] - nr[c], 2), 0),
+          ).toFixed(4),
+        )
+        return {
+          index: i,
+          original: rawData[i],
+          normalized: nr,
+          additive,
+          distance,
+        }
+      })
 
-     
-      let bestAdd = results.filter((r) => r.additive === Math.max(...results.map((r) => r.additive)));
+      let bestAdd = results.filter(
+        (r) => r.additive === Math.max(...results.map((r) => r.additive)),
+      )
       if (bestAdd.length > 1) {
-        const minD = Math.min(...bestAdd.map((r) => r.distance));
-        bestAdd = bestAdd.filter((r) => r.distance === minD);
+        const minD = Math.min(...bestAdd.map((r) => r.distance))
+        bestAdd = bestAdd.filter((r) => r.distance === minD)
       }
-      let bestDist = results.filter((r) => r.distance === Math.min(...results.map((r) => r.distance)));
+      let bestDist = results.filter(
+        (r) => r.distance === Math.min(...results.map((r) => r.distance)),
+      )
       if (bestDist.length > 1) {
-        const maxA = Math.max(...bestDist.map((r) => r.additive));
-        bestDist = bestDist.filter((r) => r.additive === maxA);
+        const maxA = Math.max(...bestDist.map((r) => r.additive))
+        bestDist = bestDist.filter((r) => r.additive === maxA)
       }
 
-    
-      db.prepare('UPDATE runs SET results = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
-        .run(JSON.stringify(results), id);
+      db.prepare(
+        'UPDATE runs SET results = ?, criteria = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      ).run(JSON.stringify(results), JSON.stringify(criteria), id)
 
-     
       res.json({
         results,
         bestAdditive: bestAdd[0],
         bestDistance: bestDist[0],
-      });
+      })
     } catch (err) {
-      next(err);
+      next(err)
     }
-  }
-);
-
-
-
-
+  },
+)
 
 app.use((err: any, _req: Request, res: Response, _next: NextFunction): void => {
   console.error(err)

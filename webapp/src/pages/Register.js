@@ -1,36 +1,94 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+var __awaiter =
+  (this && this.__awaiter) ||
+  function (thisArg, _arguments, P, generator) {
+    function adopt(value) {
+      return value instanceof P
+        ? value
+        : new P(function (resolve) {
+            resolve(value)
+          })
+    }
     return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import '../styles/auth.css';
-export const RegisterPage = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState(null);
-    const navigate = useNavigate();
-    const handleSubmit = (e) => __awaiter(void 0, void 0, void 0, function* () {
-        e.preventDefault();
-        setError(null);
+      function fulfilled(value) {
         try {
-            const res = yield fetch('http://localhost:4000/auth/register', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            if (!res.ok)
-                throw yield res.json();
-            navigate('/login');
+          step(generator.next(value))
+        } catch (e) {
+          reject(e)
         }
-        catch (err) {
-            setError(err.error || 'Registration failed');
+      }
+      function rejected(value) {
+        try {
+          step(generator['throw'](value))
+        } catch (e) {
+          reject(e)
         }
-    });
-    return (_jsx("div", { className: "auth-wrapper", children: _jsxs("div", { className: "auth-card", children: [_jsx("h1", { children: "Register" }), error && _jsx("div", { className: "error", children: error }), _jsxs("form", { onSubmit: handleSubmit, children: [_jsx("input", { type: "text", value: username, onChange: e => setUsername(e.target.value), placeholder: "Username" }), _jsx("input", { type: "password", value: password, onChange: e => setPassword(e.target.value), placeholder: "Password" }), _jsx("button", { type: "submit", children: "Register" })] }), _jsxs("div", { className: "switch-link", children: ["Already have an account? ", _jsx(Link, { to: "/login", children: "Login here" })] })] }) }));
-};
+      }
+      function step(result) {
+        result.done
+          ? resolve(result.value)
+          : adopt(result.value).then(fulfilled, rejected)
+      }
+      step((generator = generator.apply(thisArg, _arguments || [])).next())
+    })
+  }
+import { jsx as _jsx, jsxs as _jsxs } from 'react/jsx-runtime'
+import { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import '../styles/auth.css'
+export const RegisterPage = () => {
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState(null)
+  const navigate = useNavigate()
+  const handleSubmit = (e) =>
+    __awaiter(void 0, void 0, void 0, function* () {
+      e.preventDefault()
+      setError(null)
+      try {
+        const res = yield fetch('http://localhost:4000/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        })
+        if (!res.ok) throw yield res.json()
+        navigate('/login')
+      } catch (err) {
+        setError(err.error || 'Registration failed')
+      }
+    })
+  return _jsx('div', {
+    className: 'auth-wrapper',
+    children: _jsxs('div', {
+      className: 'auth-card',
+      children: [
+        _jsx('h1', { children: 'Register' }),
+        error && _jsx('div', { className: 'error', children: error }),
+        _jsxs('form', {
+          onSubmit: handleSubmit,
+          children: [
+            _jsx('input', {
+              type: 'text',
+              value: username,
+              onChange: (e) => setUsername(e.target.value),
+              placeholder: 'Username',
+            }),
+            _jsx('input', {
+              type: 'password',
+              value: password,
+              onChange: (e) => setPassword(e.target.value),
+              placeholder: 'Password',
+            }),
+            _jsx('button', { type: 'submit', children: 'Register' }),
+          ],
+        }),
+        _jsxs('div', {
+          className: 'switch-link',
+          children: [
+            'Already have an account? ',
+            _jsx(Link, { to: '/login', children: 'Login here' }),
+          ],
+        }),
+      ],
+    }),
+  })
+}
